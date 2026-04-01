@@ -1,0 +1,17 @@
+{
+  "name": "leadpipe-sdks",
+  "private": true,
+  "packageManager": "pnpm@10.11.0",
+  "scripts": {
+    "build": "pnpm --filter @leadpipe/client build",
+    "clean": "pnpm --filter @leadpipe/client clean",
+    "spec:refresh": "node scripts/refresh-openapi.mjs",
+    "typecheck": "pnpm --filter @leadpipe/client typecheck"
+  },
+  "devDependencies": {
+    "@types/node": "^24.1.0",
+    "tsx": "^4.20.5",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.2"
+  }
+}
