@@ -147,18 +147,6 @@ const exportJob = await client.intent.audiences.export(updated.data.id);
 console.log(exportJob.data.downloadUrl);
 ```
 
-## How This SDK Is Derived
-
-The package is based on the Leadpipe intent OpenAPI snapshot in `spec/openapi-intent.json` and validated against the live API at `https://api.aws53.cloud/openapi-intent.json`. The client is intentionally thin: routes, request bodies, and response types are mapped directly from the public contract, with no codegen-heavy runtime layer.
-
-The SDK favors the live public API behavior when the checked-in OpenAPI snapshot lags behind runtime for a response shape. Refresh the snapshot when the public contract changes.
-
-If the intent spec changes, refresh the snapshot:
-
-```bash
-pnpm spec:refresh
-```
-
 ## Notes
 
 - The repo currently ships one official public SDK: `@leadpipe/client`
