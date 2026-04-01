@@ -1,6 +1,6 @@
 {
   "name": "@leadpipe/client",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Official TypeScript client for Leadpipe intent APIs: public topic discovery plus authenticated audience workflows.",
   "license": "MIT",
   "repository": {
@@ -8,7 +8,7 @@
     "url": "git+https://github.com/leadpipe-com/sdk.git",
     "directory": "packages/typescript"
   },
-  "homepage": "https://api.aws53.cloud/docs/intent-api",
+  "homepage": "https://leadpipe.com",
   "bugs": {
     "url": "https://github.com/leadpipe-com/sdk/issues"
   },
