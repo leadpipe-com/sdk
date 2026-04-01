@@ -4,6 +4,7 @@ export { LeadpipeError } from "./errors";
 export type {
   AudienceCreateInput,
   AudienceCreatedResponse,
+  AudienceDeleteResponse,
   AudienceDetailResponse,
   AudienceExportParams,
   AudienceExportResponse,

@@ -4,7 +4,7 @@ Public SDKs for Leadpipe. This repository starts with one unified TypeScript cli
 
 ## What This Is
 
-Leadpipe exposes intent data APIs for topic discovery, audience building, and identity-linked audience results. The current public package is `@leadpipe/client` and it ships a single `Leadpipe` class for both public discovery and authenticated audience workflows.
+Leadpipe exposes intent data APIs for topic discovery, audience building, materialized audience results, runs, stats, and exports. The current public package is `@leadpipe/client` and it ships a single `Leadpipe` class for both anonymous discovery and authenticated audience workflows.
 
 ## Repo Structure
 
@@ -18,12 +18,18 @@ spec/           # checked-in OpenAPI snapshot for the intent API
 ## Install
 
 ```bash
+npm install @leadpipe/client
+```
+
+or
+
+```bash
 pnpm add @leadpipe/client
 ```
 
 ## Auth
 
-The same client supports both modes:
+The same client supports both modes, but they are not interchangeable:
 
 ```ts
 import { Leadpipe } from "@leadpipe/client";
@@ -33,7 +39,28 @@ const apiKeyClient = new Leadpipe({ apiKey: process.env.LEADPIPE_API_KEY });
 const bearerClient = new Leadpipe({ bearerToken: process.env.LEADPIPE_BEARER_TOKEN });
 ```
 
-Discovery routes are public and rate-limited. Audience routes use the same client with either `apiKey` or `bearerToken`.
+Use `new Leadpipe()` only for public discovery routes:
+- `client.intent.topics.list()`
+- `client.intent.topics.facets()`
+- `client.intent.topics.search()`
+- `client.intent.topics.trend()`
+- `client.intent.topics.compare()`
+- `client.intent.topics.movers()`
+- `client.intent.topics.analyze()`
+
+Use `apiKey` or `bearerToken` for anything audience-related:
+- `client.intent.audiences.preview()`
+- `client.intent.audiences.query()`
+- `client.intent.audiences.create()`
+- `client.intent.audiences.update()`
+- `client.intent.audiences.status()`
+- `client.intent.audiences.results()`
+- `client.intent.audiences.runs()`
+- `client.intent.audiences.stats()`
+- `client.intent.audiences.export()`
+- `client.intent.audiences.waitUntilReady()`
+
+Most developers should use an API key. Anonymous usage is mainly for topic discovery and site analysis.
 
 ## Quickstart
 
@@ -60,11 +87,14 @@ const analysis = await client.intent.topics.analyze({ url: "https://snowflake.co
 ## Audience Preview
 
 ```ts
+const topicSearch = await client.intent.topics.search({ q: "crm", limit: 2 });
+const topicIds = topicSearch.data.slice(0, 2).map((topic) => topic.topicId);
+
 const preview = await client.intent.audiences.preview({
-  topicIds: [1234, 5678],
+  topicIds,
   minScore: 70,
   filters: {
-    companyIndustry: ["Software"],
+    companyIndustry: ["software development"],
     hasBusinessEmail: true,
   },
 });
@@ -73,13 +103,16 @@ const preview = await client.intent.audiences.preview({
 ## Create And Activate
 
 ```ts
+const topicSearch = await client.intent.topics.search({ q: "crm", limit: 2 });
+const topicIds = topicSearch.data.slice(0, 2).map((topic) => topic.topicId);
+
 const created = await client.intent.audiences.create({
   name: "Sales-led SaaS buyers",
   config: {
-    topicIds: [1234, 5678],
+    topicIds,
     minScore: 70,
     filters: {
-      companyIndustry: ["Software"],
+      companyIndustry: ["software development"],
     },
   },
 });
@@ -118,6 +151,8 @@ console.log(exportJob.data.downloadUrl);
 
 The package is based on the Leadpipe intent OpenAPI snapshot in `spec/openapi-intent.json` and validated against the live API at `https://api.aws53.cloud/openapi-intent.json`. The client is intentionally thin: routes, request bodies, and response types are mapped directly from the public contract, with no codegen-heavy runtime layer.
 
+The SDK favors the live public API behavior when the checked-in OpenAPI snapshot lags behind runtime for a response shape. Refresh the snapshot when the public contract changes.
+
 If the intent spec changes, refresh the snapshot:
 
 ```bash
@@ -129,4 +164,4 @@ pnpm spec:refresh
 - The repo currently ships one official public SDK: `@leadpipe/client`
 - `client.intent.topics.*` covers public discovery routes
 - `client.intent.audiences.*` covers authenticated audience building and results
-- `client.identification` is reserved for later
+- identification / resolution modules are not part of the current SDK yet

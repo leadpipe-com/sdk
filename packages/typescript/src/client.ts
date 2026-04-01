@@ -1,10 +1,11 @@
 import {
-  describeErrorPayload,
   LeadpipeError,
+  parseErrorPayload,
 } from "./errors";
 import type {
   AudienceCreateInput,
   AudienceCreatedResponse,
+  AudienceDeleteResponse,
   AudienceDetailResponse,
   AudienceExportParams,
   AudienceExportResponse,
@@ -19,7 +20,6 @@ import type {
   AudienceResultsParams,
   AudienceResultsMaterializingResponse,
   AudienceResultsResponse,
-  AudienceRunStatus,
   AudienceRunsResponse,
   AudienceStatsParams,
   AudienceStatsResponse,
@@ -158,8 +158,8 @@ class AudiencesClient {
     return this.client.request("PATCH", `/v1/intent/audiences/${id}`, { body: input });
   }
 
-  async delete(id: string): Promise<void> {
-    await this.client.request("DELETE", `/v1/intent/audiences/${id}`);
+  delete(id: string): Promise<AudienceDeleteResponse> {
+    return this.client.request("DELETE", `/v1/intent/audiences/${id}`);
   }
 
   status(id: string, params?: AudienceStatusParams): Promise<AudienceStatusResponse> {
@@ -184,8 +184,9 @@ class AudiencesClient {
   }
 
   export(id: string, params?: AudienceExportParams): Promise<AudienceExportResponse> {
-    void params;
-    return this.client.request("POST", `/v1/intent/audiences/${id}/export`);
+    return this.client.request("POST", `/v1/intent/audiences/${id}/export`, {
+      query: toQueryInput(params),
+    });
   }
 
   async waitUntilReady(audienceId: string, options: WaitUntilReadyOptions = {}): Promise<AudienceStatusResponse> {
@@ -206,17 +207,24 @@ class AudiencesClient {
       }
 
       if (current === "failed") {
-        throw new LeadpipeError({
-          status: 409,
-          method: "GET",
-          url: `/v1/intent/audiences/${audienceId}/status`,
-          message: `Audience ${audienceId} failed to materialize`,
-          payload: status,
+      throw new LeadpipeError({
+        code: "RUN_FAILED",
+        status: 409,
+        method: "GET",
+        url: `/v1/intent/audiences/${audienceId}/status`,
+        message: `Audience ${audienceId} failed to materialize`,
+        payload: status,
         });
       }
 
       if (Date.now() - startedAt >= timeoutMs) {
-        throw new Error(`Timed out waiting for audience ${audienceId} to become ready`);
+      throw new LeadpipeError({
+        code: "TIMEOUT",
+        status: 408,
+        method: "GET",
+        url: `/v1/intent/audiences/${audienceId}/status`,
+        message: `Timed out waiting for audience ${audienceId} to become ready`,
+      });
       }
 
       await sleep(intervalMs);
@@ -294,12 +302,15 @@ export class Leadpipe {
     const parsed = parseResponseBody(text);
 
     if (!response.ok) {
+      const error = parseErrorPayload(parsed, `${method} ${url.pathname} failed with ${response.status}`);
+
       throw new LeadpipeError({
+        ...(error.code ? { code: error.code } : {}),
         status: response.status,
         method,
         url: url.toString(),
         payload: parsed,
-        message: describeErrorPayload(parsed, `${method} ${url.pathname} failed with ${response.status}`),
+        message: error.message,
       });
     }
 
@@ -314,6 +325,7 @@ export class Leadpipe {
 export type {
   AudienceCreateInput,
   AudienceCreatedResponse,
+  AudienceDeleteResponse,
   AudienceDetailResponse,
   AudienceExportParams,
   AudienceExportResponse,
@@ -328,7 +340,6 @@ export type {
   AudienceResultsParams,
   AudienceResultsMaterializingResponse,
   AudienceResultsResponse,
-  AudienceRunStatus,
   AudienceRunsResponse,
   AudienceStatsParams,
   AudienceStatsResponse,

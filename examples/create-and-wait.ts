@@ -5,15 +5,24 @@ async function main(): Promise<void> {
     apiKey: process.env.LEADPIPE_API_KEY,
   });
 
+  const topics = await client.intent.topics.search({
+    q: "crm",
+    limit: 2,
+  });
+
+  if (topics.data.length < 2) {
+    throw new Error("Need at least 2 matching topics to create the sample audience");
+  }
+
   const created = await client.intent.audiences.create({
     name: "Sales-led SaaS buyers",
     config: {
-      topicIds: [1234, 5678],
+      topicIds: topics.data.slice(0, 2).map((topic) => topic.topicId),
       minScore: 70,
       minTopicOverlap: 1,
       filters: {
-        companyIndustry: ["Software"],
-        companySize: ["51-200", "201-500"],
+        companyIndustry: ["software development"],
+        companySize: ["51 to 100", "101 to 250"],
       },
     },
   });

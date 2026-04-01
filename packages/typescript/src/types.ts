@@ -1,20 +1,27 @@
 export type TopicType = "b2b" | "b2c" | "both";
 export type AudienceLifecycleStatus = "draft" | "active" | "paused";
 export type AudienceRunStatus = "ready" | "materializing" | "failed" | "none";
+export type LeadpipeBooleanString = "y" | "n" | null;
 
 export interface TopicRecord {
   topicId: number;
   topicName: string;
-  type: string;
+  type: TopicType;
   industry: string;
   category: string;
 }
 
+export interface TopicInventoryFilters {
+  type: TopicType | null;
+  industry: string | null;
+  category: string | null;
+  q: string | null;
+}
+
 export interface TopicInventoryMeta {
+  count: number;
   total: number;
-  page: number;
-  pageSize: number;
-  hasMore: boolean;
+  filters: TopicInventoryFilters;
 }
 
 export interface TopicInventoryResponse {
@@ -32,6 +39,7 @@ export interface TopicInventoryFacetsResponse {
     types: TopicFacetValue[];
     industries: TopicFacetValue[];
     categories: TopicFacetValue[];
+    total: number;
   };
 }
 
@@ -114,6 +122,7 @@ export interface SiteTopicsResponse {
     summary: string | null;
     keywords: string[];
     topics: SiteTopicMatch[];
+    contentHash?: string;
   };
 }
 
@@ -154,12 +163,43 @@ export interface AudiencePreviewInput {
 }
 
 export interface AudiencePreviewSample {
-  hem: string;
   intentScore: number;
-  topicId: number;
-  email: string;
-  company: string;
-  jobTitle: string;
+  topicId: number | null;
+  topicName: string | null;
+  matchedTopicIds: number[] | null;
+  topicOverlap: number | null;
+  email: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  ageRange: string | null;
+  gender: string | null;
+  headline: null;
+  linkedinUrl: string | null;
+  incomeRange: null;
+  netWorth: null;
+  isB2b: LeadpipeBooleanString;
+  isB2c: LeadpipeBooleanString;
+  city: string | null;
+  state: string | null;
+  jobTitle: string | null;
+  seniority: string | null;
+  department: string | null;
+  company: string | null;
+  companyDomain: null;
+  companyIndustry: string | null;
+  companySize: string | null;
+  companyRevenue: null;
+  companyRevenueRange: string | null;
+  companyLinkedinUrl: null;
+  companyNaics: null;
+  companySic: null;
+  directNumbers: string | null;
+  businessEmail: string | null;
+  emailHashes: {
+    sha256: string | null;
+    sha1: null;
+    md5: null;
+  };
   masked: boolean;
 }
 
@@ -179,21 +219,79 @@ export interface AudienceQueryInput extends AudiencePreviewInput {
   cursor?: string | null;
 }
 
-export interface AudienceRecord {
-  hem: string;
-  intentScore: number;
-  topicId: number;
-  email: string;
-  company: string;
-  jobTitle: string;
+export interface LeadpipeEmailHashes {
+  sha256: string | null;
+  sha1: string | null;
+  md5: string | null;
 }
+
+export interface AudienceQueryPerson {
+  intentScore: number;
+  topicId: number | null;
+  topicName: string | null;
+  matchedTopicIds: number[] | null;
+  topicOverlap: number | null;
+  email: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  ageRange: string | null;
+  gender: string | null;
+  headline: string | null;
+  photoUrl: string | null;
+  linkedinUrl: string | null;
+  incomeRange: string | null;
+  netWorth: string | null;
+  hasChildren: string | null;
+  isHomeowner: string | null;
+  isMarried: string | null;
+  isB2b: LeadpipeBooleanString;
+  isB2c: LeadpipeBooleanString;
+  address: string | null;
+  city: string | null;
+  state: string | null;
+  zip: string | null;
+  personalCountry: string | null;
+  jobTitle: string | null;
+  jobTitleNormalized: string | null;
+  seniority: string | null;
+  department: string | null;
+  subdepartments: string | null;
+  jobFunctions: string | null;
+  company: string | null;
+  companyDomain: string | null;
+  companyIndustry: string | null;
+  companySize: string | null;
+  companyRevenue: number | null;
+  companyRevenueRange: string | null;
+  companyCity: string | null;
+  companyState: string | null;
+  companyZip: string | null;
+  country: string | null;
+  companyLinkedinUrl: string | null;
+  companyDescription: string | null;
+  companyNaics: string | null;
+  companySic: string | null;
+  phones: string | null;
+  directNumbers: string | null;
+  mobilePhones: string | null;
+  personalPhones: string | null;
+  emails: string | null;
+  personalEmail: string | null;
+  personalEmails: string | null;
+  businessEmail: string | null;
+  businessEmails: string | null;
+  emailHashes: LeadpipeEmailHashes;
+  allEmailHashes: LeadpipeEmailHashes;
+}
+
+export type AudienceRecord = AudienceQueryPerson;
 
 export interface AudienceMeta {
   count: number;
   totalCount: number;
   nextCursor: string | null;
   hasMore: boolean;
-  status: string;
+  status: "ready";
   cacheKey: string;
   dataDate: string | null;
 }
@@ -213,6 +311,12 @@ export interface AudienceMaterializingResponse {
     status: "materializing";
     cacheKey: string;
     dataDate: string | null;
+  };
+}
+
+export interface AudienceDeleteResponse {
+  data: {
+    deleted: boolean;
   };
 }
 
@@ -297,12 +401,66 @@ export interface AudienceStatusResponse {
   };
 }
 
+export interface AudienceResultsPerson {
+  personId: string;
+  intentScore: number;
+  topicId: number;
+  topicName: string | null;
+  matchedTopicIds: number[] | null;
+  topicOverlap: number;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+  jobTitle: string | null;
+  jobTitleNormalized: string | null;
+  seniority: string | null;
+  department: string | null;
+  subdepartments: string | null;
+  jobFunctions: string | null;
+  headline: string | null;
+  company: string | null;
+  companyDomain: string | null;
+  companyIndustry: string | null;
+  companySize: string | null;
+  companyRevenue: number;
+  companyRevenueRange: string | null;
+  companyCity: string | null;
+  companyState: string | null;
+  companyZip: string | null;
+  companyCountry: string | null;
+  companyLinkedinUrl: string | null;
+  companyDescription: string | null;
+  companyNaics: string | null;
+  companySic: string | null;
+  city: string | null;
+  state: string | null;
+  zip: string | null;
+  address: string | null;
+  personalCountry: string | null;
+  linkedinUrl: string | null;
+  photoUrl: string | null;
+  ageRange: string | null;
+  gender: string | null;
+  incomeRange: string | null;
+  netWorth: string | null;
+  hasChildren: string | null;
+  isHomeowner: string | null;
+  isMarried: string | null;
+  isB2b: LeadpipeBooleanString;
+  isB2c: LeadpipeBooleanString;
+  phones: string | null;
+  directNumbers: string | null;
+  mobilePhones: string | null;
+  personalPhones: string | null;
+  emails: string | null;
+  personalEmail: string | null;
+  personalEmails: string | null;
+  businessEmails: string | null;
+  businessEmail: string | null;
+}
+
 export interface AudienceResultsResponse {
-  data: {
-    personId: string;
-    intentScore: number;
-    email: string;
-  }[];
+  data: AudienceResultsPerson[];
   meta: {
     count: number;
     totalCount: number;
@@ -316,7 +474,7 @@ export interface AudienceResultsResponse {
 export interface AudienceResultsMaterializingResponse {
   data: unknown[];
   meta: {
-    status: string;
+    status: "materializing";
     dataDate: string | null;
   };
 }
@@ -357,6 +515,7 @@ export interface AudienceFiltersResponse {
     companyIndustry: string[];
     companySize: string[];
     department: string[];
+    state: string[];
     companyRevenueRange: string[];
     ageRange: string[];
     gender: string[];
@@ -380,7 +539,9 @@ export interface AudienceStatsParams {
   date?: string;
 }
 
-export type AudienceExportParams = Record<string, never>;
+export interface AudienceExportParams {
+  date?: string;
+}
 
 export interface TopicsListParams {
   type?: TopicType;

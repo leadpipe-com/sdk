@@ -3,10 +3,10 @@
   "private": true,
   "packageManager": "pnpm@10.11.0",
   "scripts": {
-    "build": "pnpm --filter @leadpipe/client build",
-    "clean": "pnpm --filter @leadpipe/client clean",
+    "build": "corepack pnpm --filter @leadpipe/client build",
+    "clean": "corepack pnpm --filter @leadpipe/client clean",
     "spec:refresh": "node scripts/refresh-openapi.mjs",
-    "typecheck": "pnpm --filter @leadpipe/client typecheck"
+    "typecheck": "corepack pnpm --filter @leadpipe/client typecheck"
   },
   "devDependencies": {
     "@types/node": "^24.1.0",
